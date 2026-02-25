@@ -1,9 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AngularTodoAPI.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace AngularTodoAPI.Data
 {
-    // CONTINUE HERE!!!
-    public class TodoContext
+    public class TodoContext : DbContext
     {
+        public TodoContext(DbContextOptions<TodoContext> options) : base(options) { }
+        public DbSet<TodoItem> Todos { get; set; } 
     }
 }
