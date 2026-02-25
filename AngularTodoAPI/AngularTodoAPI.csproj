@@ -16,4 +16,7 @@
 	  </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+  </ItemGroup>
+
 </Project>
