@@ -10,7 +10,7 @@ namespace AngularTodoAPI.Models
 
         [Required]
         [MaxLength(200)]
-        public string Title { get; set; }
+        public string Title { get; set; } = "";
 
         public bool IsComplete { get; set; }
 
