@@ -49,5 +49,15 @@ namespace AngularTodoAPI.Controllers
             return NoContent();
         }
 
+        [HttpDelete("{id}")] // DELETE api/todo/{id}
+        public async Task<IActionResult> Delete(int id)
+        {
+            var item = await _context.Todos.FindAsync(id);
+            if (item == null) return NotFound();
+            _context.Todos.Remove(item);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
     }
 }
