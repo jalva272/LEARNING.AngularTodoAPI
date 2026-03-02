@@ -25,11 +25,28 @@ namespace AngularTodoAPI.Controllers
         }
 
         [HttpGet("{id}")] // HTTP GET api/todo/{id}
-        public async Task<ActionResult<TodoItem>> Get(int id) // returns a single TodoItem (or 404)
+        public async Task<ActionResult<TodoItem>> Get(int id)
         {
-            var item = await _context.Todos.FindAsync(id); // find by PK
-            if (item == null) return NotFound(); // return 404 if not found
-            return item; // return the found item (200 OK with JSON body)
+            var item = await _context.Todos.FindAsync(id);
+            if (item == null) return NotFound();
+            return item;
+        }
+
+        [HttpPost] // HTTP POST api/todo
+        public async Task<ActionResult<TodoItem>> Post(TodoItem item)
+        {
+            _context.Todos.Add(item);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction(nameof(Get), new { id = item.Id }, item);
+        }
+
+        [HttpPut("{id}")] // PUT api/todo/{id}
+        public async Task<IActionResult> Put(int id, TodoItem item)
+        {
+            if (id != item.Id) return BadRequest();
+            _context.Entry(item).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
 
     }
