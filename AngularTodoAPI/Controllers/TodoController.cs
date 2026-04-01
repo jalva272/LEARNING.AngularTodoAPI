@@ -4,6 +4,7 @@ using AngularTodoAPI.Data;
 using AngularTodoAPI.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.OAuth.Claims;
 
 namespace AngularTodoAPI.Controllers
 {
@@ -11,53 +12,124 @@ namespace AngularTodoAPI.Controllers
     [Route("api/[controller]")]
     public class TodoController : ControllerBase
     {
-        private readonly TodoContext _context;
+        // declare variable to store database context
+        private readonly TodoContext _db;
 
         public TodoController(TodoContext context)
         {
-            _context = context;
+            // initialize database context
+            _db = context;
         }
 
-        [HttpGet] 
-        public async Task<ActionResult<IEnumerable<TodoItem>>> Get()
+
+        // Read all tasks
+        [HttpGet] // GET api/todo
+        public async Task<ActionResult<IEnumerable<TodoItem>>> GetAll()
         {
-            return await _context.Todos.ToListAsync();
+            // build query string
+            var query = _db.Todos
+                           .FromSqlRaw("EXEC dbo.Todo_GetAll")
+                           .AsNoTracking();
+
+            // execute query
+            var rows = await query.ToListAsync();
+
+            // return response to frontend
+            return Ok(rows);
         }
 
-        [HttpGet("{id}")] // HTTP GET api/todo/{id}
-        public async Task<ActionResult<TodoItem>> Get(int id)
+
+        // Read a task
+        [HttpGet("{id:int}")] // GET api/todo/{id}
+        public async Task<ActionResult<TodoItem>> GetById(int id)
         {
-            var item = await _context.Todos.FindAsync(id);
-            if (item == null) return NotFound();
-            return item;
+            // build query string
+            var query = _db.Todos
+                           .FromSqlRaw("EXEC dbo.Todo_GetById @p0", id)
+                           .AsNoTracking();
+
+            // execute query
+            var rows = await query.ToListAsync();
+
+            // get first row
+            var row = rows.FirstOrDefault();
+
+            // return response with row if found, otherwise indicate row not found
+            return row is null ? NotFound() : Ok(row);       
         }
 
-        [HttpPost] // HTTP POST api/todo
-        public async Task<ActionResult<TodoItem>> Post(TodoItem item)
+
+        // Create task
+        [HttpPost] // POST api/todo
+        public async Task<ActionResult<TodoItem>> Create([FromBody] TodoItem dto)
         {
-            _context.Todos.Add(item);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(Get), new { id = item.Id }, item);
+            // build query string
+            var query = _db.Todos
+                           .FromSqlRaw("EXEC dbo.Todo_Create @p0, @p1", dto.Title, dto.IsComplete)
+                           .AsNoTracking();
+
+            // execute query
+            var rows = await query.ToListAsync();
+
+            // get first row
+            var row = rows.FirstOrDefault();
+
+            // check if a row is returned
+            if (row is null) return StatusCode(500, "Create failed.");
+
+            // return response with row created
+            return CreatedAtAction(nameof(GetById), new { id = row.Id }, row);
         }
 
-        [HttpPut("{id}")] // PUT api/todo/{id}
-        public async Task<IActionResult> Put(int id, TodoItem item)
+
+        // Update a task
+        [HttpPut("{id:int}")] // PUT api/todo/{id}
+        public async Task<ActionResult<TodoItem>> Update(int id, [FromBody] TodoItem req)
         {
-            if (id != item.Id) return BadRequest();
-            _context.Entry(item).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-            return NoContent();
+            // prepare the query
+            var query = _db.Todos
+                           .FromSqlRaw("EXEC dbo.Todo_Update @p0, @p1, @p2", id, req.Title, req.IsComplete)
+                           // add meta data to the query
+                           .AsNoTracking();
+
+            // execute
+            var rows = await query.ToListAsync();
+
+            // get first row
+            var updatedRow = rows.FirstOrDefault();
+
+            // check if row returned
+            if (updatedRow is null)
+            {
+                return NotFound();
+            }
+
+            // return response with the updated row
+            return Ok(updatedRow);
         }
 
-        [HttpDelete("{id}")] // DELETE api/todo/{id}
+
+        // Delete a task
+        [HttpDelete("{id:int}")] // DELETE api/todo/{id}
         public async Task<IActionResult> Delete(int id)
         {
-            var item = await _context.Todos.FindAsync(id);
-            if (item == null) return NotFound();
-            _context.Todos.Remove(item);
-            await _context.SaveChangesAsync();
+            // execute query statement and return only number of affected rows
+            var rowsAffected = await _db.Database
+                                       // returns the number of rows affected
+                                       .ExecuteSqlRawAsync("EXEC dbo.Todo_Delete @p0", id);
+
+            // check any rows affected
+            if (rowsAffected == 0)
+                return NotFound();
+
+            // row deleted
             return NoContent();
         }
 
     }
 }
+
+
+
+
+

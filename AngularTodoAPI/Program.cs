@@ -1,4 +1,5 @@
 using AngularTodoAPI.Data;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace AngularTodoAPI
@@ -9,7 +10,7 @@ namespace AngularTodoAPI
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // Add services
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -20,16 +21,16 @@ namespace AngularTodoAPI
             // add CORS policy to allow requests from the Angular frontend
             builder.Services.AddCors(options =>
             {
-               options.AddPolicy("AllowAngularDev",
-                    policy => policy.WithOrigins("http://localhost:4200")
-                                    .AllowAnyHeader()
-                                    .AllowAnyMethod());
+                options.AddPolicy("AllowAngularDev",
+                     policy => policy.WithOrigins("http://localhost:4200", "https://localhost:4200")
+                                     .AllowAnyHeader()
+                                     .AllowAnyMethod());
             });
 
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            // Configure the HTTP request
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
