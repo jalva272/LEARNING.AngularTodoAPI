@@ -5,11 +5,13 @@ using AngularTodoAPI.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.OAuth.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AngularTodoAPI.Controllers
 {
+    [Authorize] // require authentication for all endpoints in this controller
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/[controller]")] // why api/[controller]? [controller] is a placeholder that will be replaced by the name of the controller class without the "Controller" suffix. So in this case, it will be "api/todo".
     public class TodoController : ControllerBase
     {
         // declare variable to store database context
