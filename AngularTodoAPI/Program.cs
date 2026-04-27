@@ -64,7 +64,7 @@ namespace AngularTodoAPI
             var jwtSettings = builder.Configuration.GetSection("Jwt"); // get JWT settings from appsettings.json
             var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]); // get the secret key for signing JWTs
 
-            builder.Services.AddAuthentication(options =>   
+            builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; // set default authentication scheme to JWT
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; // this scheme will be used when the user tries to access a protected resource without being authenticated

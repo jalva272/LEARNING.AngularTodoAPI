@@ -8,10 +8,10 @@ namespace AngularTodoAPI.Controllers
 {
     [ApiController]
     [Route("api/auth")]
-    public class AuthController: ControllerBase
+    public class AuthController : ControllerBase
     {
         private readonly IConfiguration _config; // allows access to configuration settings from appsettings.json, such as our JWT settings
-        
+
         public AuthController(IConfiguration config)
         {
             _config = config;
@@ -20,7 +20,7 @@ namespace AngularTodoAPI.Controllers
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest request)
         {
-            // DEMO LOGIN (replace later with DB)
+            //!!! DEMO LOGIN (replace later with DB)
             if (request.Username != "admin" || request.Password != "password")
                 return Unauthorized();
 
