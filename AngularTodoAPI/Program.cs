@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Events;
+using Serilog.Filters;
 using System.Text;
 
 
@@ -17,6 +20,25 @@ namespace AngularTodoAPI
             *** Builder.Services: this is where we register services that our application will use, such as controllers, database contexts, authentication services, etc. These services are then available for dependency injection throughout the application.
             ***************************************************************/
             var builder = WebApplication.CreateBuilder(args);
+
+            // run-unique token using local date + 4-digit military time (HHmm)
+            var runToken = DateTime.Now.ToString("yyyyMMdd-HHmm"); // e.g. 20260513-2345
+
+            Directory.CreateDirectory("Logs");
+
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(builder.Configuration)
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .WriteTo.Logger(lc => lc
+                    .Filter.ByIncludingOnly(Matching.FromSource("AngularTodoAPI.Middleware.RequestTimingMiddleware"))
+                    .WriteTo.File($"Logs/log-{runToken}.log"))
+                .WriteTo.Logger(lc => lc
+                    .Filter.ByIncludingOnly(Matching.FromSource("AngularTodoAPI.Middleware.RequestTimingMiddleware"))
+                    .WriteTo.File($"Logs/log-slow-{runToken}.log", restrictedToMinimumLevel: LogEventLevel.Warning))
+                .CreateLogger();
+
+            builder.Host.UseSerilog(); // use Serilog for logging in our application, which allows us to write logs to various sinks (e.g., console, file, etc.) 
 
             // Register services
             builder.Services.AddControllers();
@@ -35,15 +57,15 @@ namespace AngularTodoAPI
                 });
 
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
-            },
-            new string[] { }
-        }
-    });
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+                        },
+                        new string[] { }
+                    }
+                });
             });
 
 
@@ -99,6 +121,8 @@ namespace AngularTodoAPI
             }
 
             app.UseHttpsRedirection();
+
+            app.UseMiddleware<AngularTodoAPI.Middleware.RequestTimingMiddleware>(); // this adds our custom middleware to the pipeline, which will log the time taken for each HTTP request
 
             app.UseCors("AllowAngularDev");
 
