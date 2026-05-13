@@ -8,6 +8,7 @@ namespace AngularTodoAPI.Data
         // Inside context, specify what tables we want to have in our database
         public TodoContext(DbContextOptions<TodoContext> options) : base(options) { }
         public DbSet<TodoItem> Todos => Set<TodoItem>();
+        public DbSet<User> Users => Set<User>();
 
     }
 }

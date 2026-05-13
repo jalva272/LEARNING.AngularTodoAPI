@@ -1,3 +1,6 @@
 <Solution>
-  <Project Path="AngularTodoAPI/AngularTodoAPI.csproj" />
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+  </Folder>
+  <Project Path="../../../../../../source/repos/AngularTodoAPI/AngularTodoAPI/AngularTodoAPI.csproj" />
 </Solution>

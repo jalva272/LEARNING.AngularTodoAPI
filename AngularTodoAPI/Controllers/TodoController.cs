@@ -1,11 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using AngularTodoAPI.Data;
+﻿using AngularTodoAPI.Data;
 using AngularTodoAPI.Models;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication.OAuth.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AngularTodoAPI.Controllers
 {
@@ -57,7 +54,7 @@ namespace AngularTodoAPI.Controllers
             var row = rows.FirstOrDefault();
 
             // return response with row if found, otherwise indicate row not found
-            return row is null ? NotFound() : Ok(row);       
+            return row is null ? NotFound() : Ok(row);
         }
 
 
@@ -67,8 +64,8 @@ namespace AngularTodoAPI.Controllers
         {
             // build query string
             var query = _db.Todos
-                           .FromSqlRaw("EXEC dbo.Todo_Create @p0, @p1", dto.Title, dto.IsComplete)
-                           .AsNoTracking();
+                              .FromSqlRaw("EXEC dbo.Todo_Create @p0, @p1", dto.Title, dto.IsComplete)
+                              .AsNoTracking();
 
             // execute query
             var rows = await query.ToListAsync();
