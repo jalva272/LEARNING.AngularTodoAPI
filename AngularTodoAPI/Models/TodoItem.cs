@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace AngularTodoAPI.Models
 {
@@ -16,5 +15,6 @@ namespace AngularTodoAPI.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        public int OwnerUserId { get; set; } // this property will be used to associate the user with their own tasks
     }
 }

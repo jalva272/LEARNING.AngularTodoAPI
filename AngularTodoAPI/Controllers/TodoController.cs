@@ -3,6 +3,7 @@ using AngularTodoAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace AngularTodoAPI.Controllers
 {
@@ -20,14 +21,22 @@ namespace AngularTodoAPI.Controllers
             _db = context;
         }
 
+        private int GetCurrentUserId()
+        {
+            var idValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (int.TryParse(idValue, out var id)) return id;
+            throw new UnauthorizedAccessException("User id claim missing or invalid.");
+        }
+
 
         // Read all tasks
         [HttpGet] // GET api/todo
         public async Task<ActionResult<IEnumerable<TodoItem>>> GetAll()
         {
+            var currentUserId = GetCurrentUserId();
             // build query string
             var query = _db.Todos
-                           .FromSqlRaw("EXEC dbo.Todo_GetAll")
+                           .FromSqlRaw("EXEC dbo.Todo_GetAll @p0", currentUserId)
                            .AsNoTracking();
 
             // execute query
@@ -42,9 +51,10 @@ namespace AngularTodoAPI.Controllers
         [HttpGet("{id:int}")] // GET api/todo/{id}
         public async Task<ActionResult<TodoItem>> GetById(int id)
         {
+            var currentUserId = GetCurrentUserId();
             // build query string
             var query = _db.Todos
-                           .FromSqlRaw("EXEC dbo.Todo_GetById @p0", id)
+                           .FromSqlRaw("EXEC dbo.Todo_GetById @p0, @p1", id, currentUserId)
                            .AsNoTracking();
 
             // execute query
@@ -62,9 +72,10 @@ namespace AngularTodoAPI.Controllers
         [HttpPost] // POST api/todo
         public async Task<ActionResult<TodoItem>> Create([FromBody] TodoItem dto)
         {
+            var currentUserId = GetCurrentUserId();
             // build query string
             var query = _db.Todos
-                              .FromSqlRaw("EXEC dbo.Todo_Create @p0, @p1", dto.Title, dto.IsComplete)
+                              .FromSqlRaw("EXEC dbo.Todo_Create @p0, @p1, @p2", dto.Title, dto.IsComplete, currentUserId)
                               .AsNoTracking();
 
             // execute query
@@ -85,10 +96,10 @@ namespace AngularTodoAPI.Controllers
         [HttpPut("{id:int}")] // PUT api/todo/{id}
         public async Task<ActionResult<TodoItem>> Update(int id, [FromBody] TodoItem req)
         {
+            var currentUserId = GetCurrentUserId();
             // prepare the query
             var query = _db.Todos
-                           .FromSqlRaw("EXEC dbo.Todo_Update @p0, @p1, @p2", id, req.Title, req.IsComplete)
-                           // add meta data to the query
+                           .FromSqlRaw("EXEC dbo.Todo_Update @p0, @p1, @p2, @p3", id, req.Title, req.IsComplete, currentUserId)
                            .AsNoTracking();
 
             // execute
@@ -112,10 +123,11 @@ namespace AngularTodoAPI.Controllers
         [HttpDelete("{id:int}")] // DELETE api/todo/{id}
         public async Task<IActionResult> Delete(int id)
         {
+            var currentUserId = GetCurrentUserId();
             // execute query statement and return only number of affected rows
             var rowsAffected = await _db.Database
                                        // returns the number of rows affected
-                                       .ExecuteSqlRawAsync("EXEC dbo.Todo_Delete @p0", id);
+                                       .ExecuteSqlRawAsync("EXEC dbo.Todo_Delete @p0, @p1", id, currentUserId);
 
             // check any rows affected
             if (rowsAffected == 0)
@@ -127,8 +139,3 @@ namespace AngularTodoAPI.Controllers
 
     }
 }
-
-
-
-
-

@@ -104,12 +104,12 @@ namespace AngularTodoAPI.Controllers
             var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(req.password));
             if (!computedHash.SequenceEqual(storedHashBytes)) return Unauthorized();
 
-            var token = GenerateJwtToken(user.UserName);
+            var token = GenerateJwtToken(user.Id, user.UserName);
 
             return Ok(new { token });
         }
 
-        private string GenerateJwtToken(string username)
+        private string GenerateJwtToken(int userId, string username)
         {
             var jwtSettings = _config.GetSection("Jwt");
             var key = new SymmetricSecurityKey(
@@ -118,7 +118,10 @@ namespace AngularTodoAPI.Controllers
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[] { new Claim(ClaimTypes.Name, username) };
+            var claims = new[] {
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()), // include user ID in the token claims so that we can identify the user when they make requests to protected endpoints
+                new Claim(ClaimTypes.Name, username)
+            };
 
             var token = new JwtSecurityToken(
                 jwtSettings["Issuer"],
