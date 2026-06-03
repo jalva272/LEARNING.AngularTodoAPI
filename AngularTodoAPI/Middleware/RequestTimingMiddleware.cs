@@ -15,6 +15,7 @@ namespace AngularTodoAPI.Middleware
             _logger = logger;
         }
 
+        // InvokeAsync is a required method because it is part of the IMiddleware interface. It is called for each HTTP request
         public async Task InvokeAsync(HttpContext context) // context parameter represents the current HTTP request and response, and allows the middleware to access and modify them as needed
         {
             var sw = Stopwatch.StartNew();
